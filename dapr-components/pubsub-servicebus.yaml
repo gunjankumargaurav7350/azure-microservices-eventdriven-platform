@@ -1,0 +1,17 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: pubsub-servicebus
+  namespace: default
+spec:
+  type: pubsub.azure.servicebus.topics
+  version: v1
+  metadata:
+    - name: connectionString
+      secretKeyRef:
+        name: servicebus-secret
+        key: connectionString
+    - name: maxActiveMessages
+      value: "100"
+    - name: timeoutInSeconds
+      value: "60"
