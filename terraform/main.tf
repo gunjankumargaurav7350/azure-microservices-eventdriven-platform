@@ -49,3 +49,4 @@ module "service_bus" {
   subscriptions       = each.value.subscriptions
   tags                = merge(azurerm_resource_group.microservices_rg.tags, each.value.tags)
 }
+

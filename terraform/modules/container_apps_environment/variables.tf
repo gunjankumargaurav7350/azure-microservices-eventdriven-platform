@@ -28,6 +28,34 @@ variable "retention_in_days" {
   default     = 30
 }
 
+variable "container_apps" {
+  type = map(object({
+    image        = string
+    cpu          = number
+    memory       = string
+    min_replicas = optional(number, 1)
+    max_replicas = optional(number, 5)
+    target_port  = optional(number, 8000)
+    enable_dapr  = optional(bool, true)
+    env = optional(list(object({
+      name  = string
+      value = string
+    })), [])
+  }))
+  description = "Map of container apps managed via for_each"
+  default = {
+    "order-service" = {
+      image        = "ghcr.io/gunjankumargaurav7350/order-service:latest"
+      cpu          = 0.5
+      memory       = "1.0Gi"
+      min_replicas = 1
+      max_replicas = 5
+      target_port  = 8000
+      enable_dapr  = true
+    }
+  }
+}
+
 variable "tags" {
   type        = map(string)
   default     = {}

@@ -9,3 +9,4 @@ output "topic_ids" {
 output "subscription_ids" {
   value = { for k, v in azurerm_servicebus_subscription.subscriptions : k => v.id }
 }
+

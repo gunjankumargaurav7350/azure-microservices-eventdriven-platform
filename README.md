@@ -1,30 +1,12 @@
-# ⚡ Azure Microservices Event-Driven Platform (Dapr + Service Bus + Container Apps)
+# Azure Microservices Event-Driven Platform
 
-<div align="center">
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Azure Container Apps](https://img.shields.io/badge/Compute-Azure_Container_Apps-0078D4.svg?logo=microsoftazure)](https://azure.microsoft.com)
-[![Dapr](https://img.shields.io/badge/Distributed_Runtime-Dapr_1.13-4B82F0.svg?logo=dapr)](https://dapr.io/)
-[![Azure Service Bus](https://img.shields.io/badge/Messaging-Azure_Service_Bus-blue.svg)](https://azure.microsoft.com)
-[![Python](https://img.shields.io/badge/Language-Python_FastAPI-3776AB.svg?logo=python)](https://fastapi.tiangolo.com)
-
-**Enterprise Asynchronous Microservices Fabric • Distributed Application Runtime (Dapr) • Service Bus Pub/Sub • Zero-Locking Cosmos DB State Store**
-
-[Architecture](#-architecture) • [Dapr Integration](#-dapr-distributed-building-blocks) • [Service Flow](#-event-driven-messaging-flow) • [Deployment](#-deployment)
-
-</div>
-
----
-
-## 🎯 Executive Overview
-
-Modern microservices architectures require loose coupling, resilience against cascading failures, and high-throughput asynchronous communication. **Azure Microservices Event-Driven Platform** was designed and implemented by **Gunjan Kumar Gaurav** utilizing **Azure Container Apps** and **Dapr (Distributed Application Runtime)**.
+An asynchronous microservices architecture built on Azure Container Apps, Dapr runtime, and Azure Service Bus.
 
 ```
 [ Client Traffic (HTTP/REST) ]
               |
               v
-[ Order Microservice (Container App) ]
+[ Order Service (FastAPI Container App) ]
               |
               v  (Dapr Sidecar HTTP/gRPC)
 [ Azure Service Bus Topic: orders.v1 ]
@@ -32,43 +14,80 @@ Modern microservices architectures require loose coupling, resilience against ca
       +-------+-------+
       |               |
       v               v
-[ Payment Worker ]  [ Inventory Sync Worker ]
-      |               |
-      v               v
-[ Cosmos DB State ] [ Redis Cache Cluster ]
+[ Payment Worker ]  [ Inventory Worker ]
 ```
 
----
+## Features
 
-## ⚡ Key Capabilities
+- **Decoupled Messaging:** Asynchronous pub/sub via Azure Service Bus using Dapr sidecars.
+- **Auto-Scaling:** Serverless scale-to-zero compute with KEDA scaling on queue depth.
+- **Security-First Container:** Multi-stage non-root Docker build with health probes.
+- **IaC with Terraform:** Modular infrastructure with dynamic `for_each` resource definition.
+- **CI/CD:** Automated testing, linting, container builds, and Trivy security scanning.
 
-* **Dapr Sidecar Architecture:** Decouples microservices from vendor-specific SDKs. Service invocation, pub/sub, state management, and secrets are handled via local Dapr sidecars.
-* **Elastic Serverless Scaling (KEDA):** Container Apps automatically scale from 0 to 100+ replicas based on Azure Service Bus topic queue depth.
-* **Distributed Tracing (W3C Trace Context):** End-to-end request tracing aggregated into Azure Application Insights without invasive manual code instrumentation.
-
----
-
-## 📁 Repository Structure
+## Repository Layout
 
 ```
 azure-microservices-eventdriven-platform/
+├── .github/workflows/
+│   ├── order-service-ci.yml              # Python lint, test, docker build & Trivy scan
+│   └── terraform-ci-cd.yml               # Terraform fmt, init & validate
+├── azure-pipelines.yml                   # Azure DevOps pipeline
 ├── dapr-components/
-│   ├── pubsub-servicebus.yaml            # Dapr Service Bus Topic binding
-│   └── statestore-cosmos.yaml            # Distributed state store configuration
+│   └── pubsub-servicebus.yaml            # Dapr pub/sub binding
 ├── services/
-│   ├── order-service/                    # Producer REST API microservice
-│   └── payment-processor/                # Consumer background worker
-├── terraform/
-│   ├── container_apps.tf                 # Container Apps Environment & Service Bus
-│   ├── variables.tf
-│   └── outputs.tf
-└── README.md
+│   └── order-service/                    # FastAPI order service
+│       ├── Dockerfile                    # Multi-stage non-root build
+│       ├── order_api.py                  # API endpoints & Dapr publisher
+│       ├── requirements.txt              # Dependencies
+│       └── tests/                        # Unit tests
+└── terraform/                            # Modular infrastructure
+    ├── main.tf
+    ├── variables.tf
+    ├── outputs.tf
+    └── modules/
+        ├── container_apps_environment/
+        └── service_bus/
 ```
 
----
+## Running the Order Service Locally
 
-## 👤 Architect & Author
+### 1. Run with Python
+
+```bash
+cd services/order-service
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn order_api:app --reload --port 8000
+```
+
+Endpoints available:
+- `GET /healthz` - Liveness probe
+- `GET /ready` - Readiness probe
+- `POST /v1/orders` - Create order
+- `GET /v1/orders` - List orders
+- `GET /v1/orders/{order_id}` - Get order by ID
+- `GET /docs` - Swagger UI
+
+### 2. Run with Docker
+
+```bash
+docker build -t order-service:latest services/order-service
+docker run -p 8000:8000 order-service:latest
+```
+
+## Deploying Infrastructure
+
+```bash
+cd terraform
+terraform init
+terraform plan
+terraform apply
+```
+
+## Author
 
 **Gunjan Kumar Gaurav**  
-*Senior Cloud Architect & DevSecOps Consultant*  
-[LinkedIn](https://www.linkedin.com/in/gunjan-gaurav) • [GitHub](https://github.com/gunjankumargaurav7350) • Email: `gunjankumargaurav7@gmail.com`
+*Senior Cloud & DevSecOps Consultant*  
+[LinkedIn](https://www.linkedin.com/in/gunjan-gaurav) • [GitHub](https://github.com/gunjankumargaurav7350)

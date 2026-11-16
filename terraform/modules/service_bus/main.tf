@@ -18,3 +18,4 @@ resource "azurerm_servicebus_subscription" "subscriptions" {
   topic_id           = azurerm_servicebus_topic.topics[each.value.topic_name].id
   max_delivery_count = each.value.max_delivery_count
 }
+
